@@ -1,4 +1,4 @@
-﻿package com.hospital.config;
+package com.hospital.config;
 
 import com.hospital.entity.*;
 import com.hospital.repository.UserRepository;
