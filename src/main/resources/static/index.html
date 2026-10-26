@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Hospital Management System - Login</title>
+	<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="auth-page">
+	<div class="auth-card">
+		<h1>🏥 Hospital Management</h1>
+		<div class="tabs"><button id="tabLogin" class="active">Login</button><button id="tabReg">Patient
+				Register</button></div>
+		<div id="msg" class="toast"></div>
+		<form id="loginForm">
+			<label>Username<input name="username" required autocomplete="username"></label>
+			<label>Password<input name="password" type="password" required autocomplete="current-password"></label>
+			<button class="btn">Login</button>
+		</form>
+		<form id="regForm" hidden>
+			<label>Full name<input name="name" required></label>
+			<label>Username<input name="username" required minlength="3"></label>
+			<label>Password<input name="password" type="password" required minlength="6"></label>
+			<label>Date of birth<input name="dateOfBirth" type="date" required></label>
+			<label>Gender<select name="gender">
+					<option>Male</option>
+					<option>Female</option>
+					<option>Other</option>
+				</select></label>
+			<label>Phone<input name="phone" placeholder="e.g. 9876543210"></label>
+			<label>Blood group<input name="bloodGroup" placeholder="e.g. O+"></label>
+			<label>Address<input name="address"></label>
+			<button class="btn">Register</button>
+		</form>
+	</div>
+	<script src="/js/api.js"></script>
+	<script src="/js/auth.js"></script>
+</body>
+
+</html>

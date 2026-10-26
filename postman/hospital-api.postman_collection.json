@@ -1,0 +1,27 @@
+{
+  "info": {"name": "Hospital Management API", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+  "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]},
+  "variable": [{"key": "baseUrl", "value": "http://localhost:8080"}, {"key": "token", "value": ""}],
+  "item": [
+    {"name": "1. Login (admin) - saves token", "request": {"auth": {"type": "noauth"}, "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/auth/login", "body": {"mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"}},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.collectionVariables.set('token', pm.response.json().token);"]}}]},
+    {"name": "2. Register patient (also saves token)", "request": {"auth": {"type": "noauth"}, "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/auth/register", "body": {"mode": "raw", "raw": "{\n  \"username\": \"john\",\n  \"password\": \"john123\",\n  \"name\": \"John Doe\",\n  \"dateOfBirth\": \"1990-05-20\",\n  \"gender\": \"Male\",\n  \"phone\": \"9876543210\",\n  \"bloodGroup\": \"O+\",\n  \"address\": \"Hyderabad\"\n}"}},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.collectionVariables.set('token', pm.response.json().token);"]}}]},
+    {"name": "3. Dashboard", "request": {"method": "GET", "url": "{{baseUrl}}/api/dashboard"}},
+    {"name": "4. Create doctor (ADMIN)", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/doctors", "body": {"mode": "raw", "raw": "{\n  \"name\": \"Dr. Ananya Rao\",\n  \"specialization\": \"Cardiology\",\n  \"phone\": \"9876500001\",\n  \"email\": \"ananya@hospital.com\",\n  \"consultationFee\": 500,\n  \"username\": \"dr.ananya\",\n  \"password\": \"doctor123\"\n}"}}},
+    {"name": "5. List doctors", "request": {"method": "GET", "url": "{{baseUrl}}/api/doctors"}},
+    {"name": "6. List patients (ADMIN/DOCTOR)", "request": {"method": "GET", "url": "{{baseUrl}}/api/patients"}},
+    {"name": "7. Book appointment (PATIENT token)", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/appointments", "body": {"mode": "raw", "raw": "{\n  \"doctorId\": 1,\n  \"dateTime\": \"2030-01-15T10:30:00\",\n  \"reason\": \"Chest pain\"\n}"}}},
+    {"name": "8. Add medical record (DOCTOR token)", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/records", "body": {"mode": "raw", "raw": "{\n  \"patientId\": 1,\n  \"diagnosis\": \"Hypertension\",\n  \"notes\": \"Monitor BP daily\"\n}"}}},
+    {"name": "9. Add prescription (DOCTOR token)", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/prescriptions", "body": {"mode": "raw", "raw": "{\n  \"recordId\": 1,\n  \"medicineName\": \"Amlodipine 5mg\",\n  \"dosage\": \"1 tablet daily\",\n  \"duration\": \"30 days\",\n  \"instructions\": \"After breakfast\"\n}"}}},
+    {"name": "10. Create bill (ADMIN)", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}],
+      "url": "{{baseUrl}}/api/bills", "body": {"mode": "raw", "raw": "{\n  \"patientId\": 1,\n  \"description\": \"Consultation fee\",\n  \"amount\": 500\n}"}}},
+    {"name": "11. Pay bill (ADMIN)", "request": {"method": "PATCH", "url": "{{baseUrl}}/api/bills/1/pay"}}
+  ]
+}
