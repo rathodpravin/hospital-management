@@ -1,19 +1,21 @@
 const role = sessionStorage.getItem('role');
 if (!sessionStorage.getItem('token')) location.href = '/index.html';
 const $ = s => document.querySelector(s);
-// Escape everything we put into HTML (prevents XSS from patient-entered text)
+
+// Escape user-entered values before inserting them into HTML.
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dt = v => (v ? String(v).replace('T', ' ').slice(0, 16) : '');
 const can = roles => !roles || roles.includes(role);
 const label = k => k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
 
 function toast(text, err) {
-  const t = $('#toast'); t.textContent = text; t.className = 'toast show' + (err ? ' err' : '');
+  const t = $('#toast');
+  t.textContent = text;
+  t.className = 'toast show' + (err ? ' err' : ' success');
   setTimeout(() => (t.className = 'toast'), 4000);
 }
-
-// Each page = API endpoint + table columns + optional create form + optional row actions.
 const badge = s => `<span class="badge ${esc(s)}">${esc(s)}</span>`;
+
 const pages = {
   dashboard: { title: 'Dashboard', custom: renderDashboard },
   doctors: {
@@ -65,6 +67,7 @@ const pages = {
     actions: [{ l: 'Mark Paid', roles: ['ADMIN'], show: r => r.status === 'UNPAID', run: r => api(`/bills/${r.id}/pay`, { method: 'PATCH' }) }]
   }
 };
+
 const menus = {
   ADMIN: ['dashboard', 'doctors', 'patients', 'appointments', 'records', 'prescriptions', 'bills'],
   DOCTOR: ['dashboard', 'appointments', 'patients', 'records', 'prescriptions'],
@@ -73,69 +76,86 @@ const menus = {
 
 async function renderDashboard(box) {
   const d = await api('/dashboard');
-  box.innerHTML = `<div class="stats">${Object.entries(d).map(([k, v]) =>
-    `<div class="stat"><b>${esc(v)}</b><span>${esc(label(k))}</span></div>`).join('')}</div>`;
+  box.innerHTML = `<div class="dashboard-welcome"><div><span class="eyebrow">YOUR WORKSPACE</span><h2>Good to see you, ${esc(sessionStorage.getItem('username') || 'there')}.</h2><p>Here’s the latest overview from your hospital system.</p></div><div class="welcome-symbol">✚</div></div>
+  <div class="stats">${Object.entries(d).map(([k, v], i) => `<div class="stat"><div class="stat-top"><span class="stat-icon">${['▦','♙','◷','＋','▤','₹'][i % 6]}</span><span class="stat-tag">LIVE DATA</span></div><b>${esc(v)}</b><span>${esc(label(k))}</span></div>`).join('')}</div>
+  <div class="card info-card"><div class="info-icon">✓</div><div><h3>Your workspace is ready</h3><p>Use the navigation menu to manage appointments, patient information, medical records and other hospital operations available to your role.</p></div></div>`;
 }
 
 async function buildForm(p) {
   let h = '';
   for (const x of p.form.fields) {
     if (!can(x.roles)) continue;
+    const required = x.req === false ? '' : 'required';
     if (x.t === 'select') {
       const opts = await api(x.src);
-      h += `<label>${x.l}<select name="${x.n}" required>${opts.map(o => `<option value="${o.id}">${esc(x.lab(o))}</option>`).join('')}</select></label>`;
-    } else h += `<label>${x.l}<input name="${x.n}" type="${x.t}" ${x.step ? `step="${x.step}"` : ''} ${x.req === false ? '' : 'required'}></label>`;
+      h += `<div class="field"><label for="${x.n}">${esc(x.l)}</label><select id="${x.n}" name="${x.n}" ${required}>${opts.map(o => `<option value="${o.id}">${esc(x.lab(o))}</option>`).join('')}</select></div>`;
+    } else {
+      h += `<div class="field"><label for="${x.n}">${esc(x.l)}</label><input id="${x.n}" name="${x.n}" type="${x.t}" ${x.step ? `step="${x.step}"` : ''} ${required}></div>`;
+    }
   }
-  return `<div class="card"><h3>${p.form.title}</h3><form id="f">${h}<button class="btn">Save</button></form></div>`;
+  return `<section class="card form-card"><div class="card-heading"><div><span class="eyebrow">MANAGE RECORDS</span><h3>${esc(p.form.title)}</h3></div><span class="card-heading-icon">＋</span></div><form id="f" class="data-form">${h}<div class="form-submit"><button class="btn btn-primary" type="submit">Save changes <span aria-hidden="true">→</span></button></div></form></section>`;
 }
 
 async function renderPage(key) {
   const p = pages[key];
+  if (!p) return;
   $('#title').textContent = p.title;
-  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.dataset.k === key));
+  const subtitle = document.querySelector('.page-subtitle');
+  if (subtitle) subtitle.textContent = ({ dashboard: 'Your hospital activity, all in one place.', doctors: 'View and maintain the hospital care team.', patients: 'Access registered patient information.', appointments: 'Coordinate visits and appointment status.', records: 'Review clinical records available to your role.', prescriptions: 'Manage prescription records.', bills: 'Review billing and payment status.' })[key] || '';
+  document.querySelectorAll('#menu a').forEach(a => a.classList.toggle('active', a.dataset.k === key));
   const box = $('#content');
+  box.innerHTML = '<div class="loading-state"><span class="spinner"></span> Loading workspace…</div>';
   try {
     if (p.custom) return await p.custom(box);
     const rows = await api(p.api);
     const acts = (p.actions || []).filter(a => can(a.roles));
     let html = p.form && can(p.form.roles) ? await buildForm(p) : '';
-    html += `<div class="card"><div class="table-wrap">`;
-    if (!rows.length) html += `<div class="empty">No records yet.</div>`;
+    html += `<section class="card table-card"><div class="card-heading"><div><span class="eyebrow">HOSPITAL DATA</span><h3>${esc(p.title)} <span class="record-count">${rows.length}</span></h3></div><span class="card-heading-icon">▤</span></div><div class="table-wrap">`;
+    if (!rows.length) html += `<div class="empty-state"><span>▤</span><strong>No records yet</strong><p>Records will appear here when they are available.</p></div>`;
     else {
-      html += `<table><tr>${p.cols.map(c => `<th>${c[0]}</th>`).join('')}${acts.length ? '<th>Actions</th>' : ''}</tr>`;
+      html += `<table><thead><tr>${p.cols.map(c => `<th>${esc(c[0])}</th>`).join('')}${acts.length ? '<th>Actions</th>' : ''}</tr></thead><tbody>`;
       rows.forEach((r, i) => {
         html += `<tr>${p.cols.map(c => `<td>${c[2] ? c[1](r) : esc(c[1](r))}</td>`).join('')}`;
-        if (acts.length) html += `<td>${acts.map((a, j) => (!a.show || a.show(r)) ? `<button class="btn sm ${a.cls || ''}" data-i="${i}" data-j="${j}">${a.l}</button>` : '').join(' ')}</td>`;
+        if (acts.length) html += `<td class="actions-cell">${acts.map((a, j) => (!a.show || a.show(r)) ? `<button class="btn btn-sm ${a.cls || 'btn-soft'}" data-i="${i}" data-j="${j}">${esc(a.l)}</button>` : '').join(' ')}</td>`;
         html += '</tr>';
       });
-      html += '</table>';
+      html += '</tbody></table>';
     }
-    box.innerHTML = html + '</div></div>';
+    box.innerHTML = html + '</div></section>';
+
     const form = $('#f');
     if (form) form.onsubmit = async e => {
       e.preventDefault();
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
       const fd = new FormData(form), body = {};
       for (const x of p.form.fields) {
         if (!can(x.roles)) continue;
         let v = fd.get(x.n);
         if (x.t === 'select' || x.t === 'number') v = v === '' ? null : Number(v);
-        else if (x.t === 'datetime-local') v = v + ':00';
+        else if (x.t === 'datetime-local' && v) v = v + ':00';
         body[x.n] = v;
       }
-      try { await api(p.api, { method: 'POST', body: JSON.stringify(body) }); toast('Saved successfully'); renderPage(key); }
-      catch (err) { toast(err.message, true); }
+      try { await api(p.api, { method: 'POST', body: JSON.stringify(body) }); toast('Saved successfully.'); await renderPage(key); }
+      catch (err) { toast(err.message, true); submitBtn.disabled = false; }
     };
     box.querySelectorAll('button[data-i]').forEach(b => b.onclick = async () => {
-      const a = acts[b.dataset.j];
-      if (a.confirm && !confirm('Are you sure?')) return;
-      try { await a.run(rows[b.dataset.i]); toast('Done'); renderPage(key); }
-      catch (err) { toast(err.message, true); }
+      const a = acts[Number(b.dataset.j)];
+      if (a.confirm && !confirm('Are you sure you want to continue?')) return;
+      b.disabled = true;
+      try { await a.run(rows[Number(b.dataset.i)]); toast('Action completed.'); await renderPage(key); }
+      catch (err) { toast(err.message, true); b.disabled = false; }
     });
-  } catch (err) { box.innerHTML = ''; toast(err.message, true); }
+  } catch (err) { box.innerHTML = `<section class="card error-card"><strong>Unable to load this section</strong><p>${esc(err.message)}</p><button class="btn btn-primary" id="retry">Try again</button></section>`; $('#retry').onclick = () => renderPage(key); }
 }
 
-$('#who').textContent = `${sessionStorage.getItem('username')} (${role})`;
-$('#menu').innerHTML = (menus[role] || []).map(k => `<a data-k="${k}">${pages[k].title}</a>`).join('');
-$('#menu').onclick = e => { if (e.target.dataset.k) renderPage(e.target.dataset.k); };
+const username = sessionStorage.getItem('username') || 'User';
+$('#who').textContent = `${username} · ${role || 'USER'}`;
+$('#avatar').textContent = username.charAt(0).toUpperCase();
+$('#today').textContent = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date());
+$('#year').textContent = new Date().getFullYear();
+$('#menu').innerHTML = (menus[role] || []).map(k => `<a href="#" data-k="${k}"><span class="nav-icon">${({dashboard:'▦',doctors:'✚',patients:'♙',appointments:'◷',records:'▤',prescriptions:'＋',bills:'₹'})[k]}</span><span>${esc(pages[k].title)}</span><span class="nav-arrow">›</span></a>`).join('');
+$('#menu').onclick = e => { const a = e.target.closest('a[data-k]'); if (a) { e.preventDefault(); renderPage(a.dataset.k); $('#sidebar').classList.remove('sidebar-open'); } };
 $('#logout').onclick = () => { sessionStorage.clear(); location.href = '/index.html'; };
+$('#mobileMenu').onclick = () => $('#sidebar').classList.toggle('sidebar-open');
 renderPage('dashboard');

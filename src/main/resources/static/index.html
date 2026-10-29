@@ -2,41 +2,212 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Hospital Management System - Login</title>
-	<link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b7c78">
+
+    <title>Health Care Hospital | Login</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body class="auth-page">
-	<div class="auth-card">
-		<h1>🏥 Hospital Management</h1>
-		<div class="tabs"><button id="tabLogin" class="active">Login</button><button id="tabReg">Patient
-				Register</button></div>
-		<div id="msg" class="toast"></div>
-		<form id="loginForm">
-			<label>Username<input name="username" required autocomplete="username"></label>
-			<label>Password<input name="password" type="password" required autocomplete="current-password"></label>
-			<button class="btn">Login</button>
-		</form>
-		<form id="regForm" hidden>
-			<label>Full name<input name="name" required></label>
-			<label>Username<input name="username" required minlength="3"></label>
-			<label>Password<input name="password" type="password" required minlength="6"></label>
-			<label>Date of birth<input name="dateOfBirth" type="date" required></label>
-			<label>Gender<select name="gender">
-					<option>Male</option>
-					<option>Female</option>
-					<option>Other</option>
-				</select></label>
-			<label>Phone<input name="phone" placeholder="e.g. 9876543210"></label>
-			<label>Blood group<input name="bloodGroup" placeholder="e.g. O+"></label>
-			<label>Address<input name="address"></label>
-			<button class="btn">Register</button>
-		</form>
-	</div>
-	<script src="/js/api.js"></script>
-	<script src="/js/auth.js"></script>
+
+    <main class="auth-shell">
+
+        <!-- Left Side: Hospital Introduction -->
+        <section class="auth-visual" aria-label="Hospital introduction">
+
+            <div class="brand brand-light">
+                <span class="brand-mark">✚</span>
+
+                <span>
+                    Health Care Hospital
+                    <span class="brand-sub">YOUR HEALTH, OUR PRIORITY</span>
+                </span>
+            </div>
+
+            <div class="visual-copy">
+
+                <span class="eyebrow">CARE THAT CONNECTS</span>
+
+                <h1>
+                    Better care.<br>
+                    <em>One connected</em><br>
+                    experience.
+                </h1>
+
+                <p>
+                    A smarter, more personal way to manage
+                    your healthcare journey.
+                </p>
+
+            </div>
+
+            <div class="visual-note">
+                <span class="pulse-dot"></span>
+                Your care, organized in one place
+            </div>
+
+            <div class="visual-orb orb-one"></div>
+            <div class="visual-orb orb-two"></div>
+
+        </section>
+
+
+        <!-- Right Side: Login Form -->
+        <section class="auth-panel">
+
+            <!-- Mobile Branding -->
+            <div class="mobile-brand brand">
+
+                <span class="brand-mark">✚</span>
+
+                <span>
+                    Health Care Hospital
+                    <span class="brand-sub">YOUR HEALTH, OUR PRIORITY</span>
+                </span>
+
+            </div>
+
+
+            <!-- Login Heading -->
+            <div class="auth-heading">
+
+                <span class="eyebrow">WELCOME BACK</span>
+
+                <h2>Sign in to your account</h2>
+
+                <p>
+                    Enter your credentials to access your secure workspace.
+                </p>
+
+            </div>
+
+
+            <!-- Login Error or Status Message -->
+            <div
+                id="msg"
+                class="toast"
+                role="status"
+                aria-live="polite">
+            </div>
+
+
+            <!-- Registration Success Message -->
+            <div
+                id="registration-message"
+                class="success-message"
+                role="status"
+                aria-live="polite"
+                hidden>
+
+                Registration successful! Please sign in with your credentials.
+
+            </div>
+
+
+            <!-- Login Form -->
+            <form id="loginForm" class="form-stack">
+
+                <label for="username">Username</label>
+
+                <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username">
+
+
+                <div class="label-row">
+                    <label for="password">Password</label>
+                </div>
+
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password">
+
+
+                <button
+                    class="btn btn-primary btn-full"
+                    type="submit">
+
+                    Sign in <span aria-hidden="true">→</span>
+
+                </button>
+
+            </form>
+
+
+            <!-- Registration Link -->
+            <div class="auth-divider">
+                <span>NEW TO HEALTH CARE HOSPITAL?</span>
+            </div>
+
+            <a
+                class="btn btn-outline btn-full"
+                href="/patient-register.html">
+
+                Create a patient account
+
+            </a>
+
+
+            <!-- Footer -->
+            <p class="auth-foot">
+                Secure access for authorized users only.
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <!-- Existing JavaScript Files -->
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+
+
+    <!-- Show Registration Success Message -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const params = new URLSearchParams(window.location.search);
+
+            if (params.get("registered") === "1") {
+
+                const message = document.getElementById("registration-message");
+
+                if (message) {
+                    message.hidden = false;
+                }
+
+                // Remove the query parameter from the browser address.
+                window.history.replaceState(
+                    {},
+                    document.title,
+                    window.location.pathname
+                );
+            }
+
+        });
+    </script>
+
 </body>
 
 </html>
