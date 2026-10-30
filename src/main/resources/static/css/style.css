@@ -1376,7 +1376,7 @@ tbody tr:hover {
    LARGE SCREENS
 ========================= */
 
-@media (min-width: 1400px) {
+@media (min-width: 1000px) {
     .stats {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
